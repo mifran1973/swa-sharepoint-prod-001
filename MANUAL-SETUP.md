@@ -10,7 +10,15 @@ Först, skapa ett nytt repository på GitHub och push din kod:
 ```bash
 # Om du inte redan har en GitHub remote
 git remote add origin https://github.com/mifran1973/swa-sharepoint-prod-001.git
+
+# Skapa main branch (viktigt för Static Web Apps!)
+git checkout -b main
 git push -u origin main
+
+# Sätt main som default branch på GitHub:
+# 1. Gå till GitHub repository
+# 2. Settings → General → Default branch
+# 3. Ändra från master till main
 ```
 
 ## 📋 Steg 2: Skapa Static Web App via Azure Portal
