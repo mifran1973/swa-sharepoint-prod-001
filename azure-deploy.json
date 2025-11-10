@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "staticWebAppName": {
+      "type": "string",
+      "defaultValue": "swa-sharepoint-dashboard",
+      "metadata": {
+        "description": "Name of the Static Web App"
+      }
+    },
+    "functionAppName": {
+      "type": "string",
+      "defaultValue": "func-sharepoint-prod-001",
+      "metadata": {
+        "description": "Name of the existing Function App"
+      }
+    },
+    "repositoryUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "GitHub repository URL"
+      }
+    },
+    "branch": {
+      "type": "string",
+      "defaultValue": "main",
+      "metadata": {
+        "description": "GitHub branch name"
+      }
+    }
+  },
+  "variables": {
+    "location": "[resourceGroup().location]",
+    "functionAppUrl": "[concat('https://', parameters('functionAppName'), '.azurewebsites.net')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/staticSites",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('staticWebAppName')]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "Free",
+        "tier": "Free"
+      },
+      "properties": {
+        "repositoryUrl": "[parameters('repositoryUrl')]",
+        "branch": "[parameters('branch')]",
+        "buildProperties": {
+          "appLocation": "/",
+          "outputLocation": "dist",
+          "apiLocation": ""
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "staticWebAppUrl": {
+      "type": "string",
+      "value": "[concat('https://', reference(resourceId('Microsoft.Web/staticSites', parameters('staticWebAppName'))).defaultHostname)]"
+    },
+    "deploymentToken": {
+      "type": "string",
+      "value": "[listSecrets(resourceId('Microsoft.Web/staticSites', parameters('staticWebAppName')), '2022-03-01').properties.apiKey]"
+    }
+  }
+}
