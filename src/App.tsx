@@ -1,11 +1,18 @@
+import { MsalProvider } from '@azure/msal-react'
+import { PublicClientApplication } from '@azure/msal-browser'
+import { msalConfig } from './config/authConfig'
 import { TicketDashboard } from './components/TicketDashboard'
 import './App.css'
 
+const msalInstance = new PublicClientApplication(msalConfig);
+
 function App() {
   return (
-    <div className="app">
-      <TicketDashboard />
-    </div>
+    <MsalProvider instance={msalInstance}>
+      <div className="app">
+        <TicketDashboard />
+      </div>
+    </MsalProvider>
   )
 }
 

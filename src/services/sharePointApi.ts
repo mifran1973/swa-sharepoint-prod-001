@@ -11,7 +11,7 @@ const API_CONFIG = {
 };
 
 class SharePointApiService {
-  private async fetchFromApi<T>(endpoint: string): Promise<T> {
+  private async fetchFromApi<T>(endpoint: string, userToken?: string): Promise<T> {
     const url = `${API_CONFIG.BASE_URL}${endpoint}`;
     
     try {
@@ -22,11 +22,19 @@ class SharePointApiService {
         ? `${url}?code=${API_CONFIG.FUNCTION_KEY}`
         : url;
       
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // If userToken is provided, add it to Authorization header for user context
+      if (userToken) {
+        headers['Authorization'] = `Bearer ${userToken}`;
+        headers['X-User-Context'] = 'true'; // Signal to Azure Function to use user context
+      }
+      
       const response = await fetch(urlWithKey, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
       });
 
       if (!response.ok) {
@@ -40,10 +48,10 @@ class SharePointApiService {
     }
   }
 
-  async getSharePointTickets(): Promise<SharePointTicket[]> {
+  async getSharePointTickets(userToken?: string): Promise<SharePointTicket[]> {
     try {
       // API:et returnerar direkt en array, inte ett objekt med value property
-      const data = await this.fetchFromApi<SharePointTicket[]>(API_CONFIG.ENDPOINTS.GET_SHAREPOINT_DATA);
+      const data = await this.fetchFromApi<SharePointTicket[]>(API_CONFIG.ENDPOINTS.GET_SHAREPOINT_DATA, userToken);
       return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error('Error fetching SharePoint tickets:', error);
