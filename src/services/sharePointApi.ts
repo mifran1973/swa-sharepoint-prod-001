@@ -2,9 +2,9 @@ import type { SharePointTicket } from '../types/sharepoint';
 
 // Configuration
 const API_CONFIG = {
-  // För utveckling - uppdatera med din riktiga Azure Function URL
-  BASE_URL: import.meta.env.VITE_AZURE_FUNCTION_URL || 'https://your-function-app.azurewebsites.net',
-  FUNCTION_KEY: import.meta.env.VITE_FUNCTION_KEY || '',
+  // För utveckling och produktion - automatisk identifiering av miljö
+  BASE_URL: import.meta.env.VITE_AZURE_FUNCTION_URL || 'https://func-sharepoint-prod-001-hmeqadf6h0g9cng8.westeurope-01.azurewebsites.net',
+  FUNCTION_KEY: import.meta.env.VITE_FUNCTION_KEY || 'X_Afg-nMAJHR5lWoaMLEzv-R5iUmEcKRWFAEO_LWqSaJAzFuOOxxYw==',
   ENDPOINTS: {
     GET_SHAREPOINT_DATA: '/api/GetSharePointData'
   }

@@ -32,6 +32,9 @@ jobs:
           api_location: "" # Api source code path - optional
           output_location: "dist" # Built app content directory - optional
           ###### End of Repository/Build Configurations ######
+        env:
+          VITE_AZURE_FUNCTION_URL: "https://func-sharepoint-prod-001-hmeqadf6h0g9cng8.westeurope-01.azurewebsites.net"
+          VITE_FUNCTION_KEY: "X_Afg-nMAJHR5lWoaMLEzv-R5iUmEcKRWFAEO_LWqSaJAzFuOOxxYw=="
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
