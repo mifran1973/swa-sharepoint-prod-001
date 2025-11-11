@@ -4,6 +4,7 @@ import type { SharePointTicket } from '../types/sharepoint';
 const API_CONFIG = {
   // För utveckling - uppdatera med din riktiga Azure Function URL
   BASE_URL: import.meta.env.VITE_AZURE_FUNCTION_URL || 'https://your-function-app.azurewebsites.net',
+  FUNCTION_KEY: import.meta.env.VITE_FUNCTION_KEY || '',
   ENDPOINTS: {
     GET_SHAREPOINT_DATA: '/api/GetSharePointData'
   }
@@ -16,7 +17,12 @@ class SharePointApiService {
     try {
       console.log('Fetching from:', url);
       
-      const response = await fetch(url, {
+      // Lägg till function key för säkerhet
+      const urlWithKey = API_CONFIG.FUNCTION_KEY 
+        ? `${url}?code=${API_CONFIG.FUNCTION_KEY}`
+        : url;
+      
+      const response = await fetch(urlWithKey, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
