@@ -34,7 +34,7 @@ jobs:
           ###### End of Repository/Build Configurations ######
         env:
           VITE_AZURE_FUNCTION_URL: "https://func-sharepoint-prod-001-hmeqadf6h0g9cng8.westeurope-01.azurewebsites.net"
-          VITE_FUNCTION_KEY: "X_Afg-nMAJHR5lWoaMLEzv-R5iUmEcKRWFAEO_LWqSaJAzFuOOxxYw=="
+          VITE_FUNCTION_KEY: ${{ secrets.AZURE_FUNCTION_KEY }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'

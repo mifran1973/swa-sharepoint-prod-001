@@ -4,7 +4,7 @@ import type { SharePointTicket } from '../types/sharepoint';
 const API_CONFIG = {
   // För utveckling och produktion - automatisk identifiering av miljö
   BASE_URL: import.meta.env.VITE_AZURE_FUNCTION_URL || 'https://func-sharepoint-prod-001-hmeqadf6h0g9cng8.westeurope-01.azurewebsites.net',
-  FUNCTION_KEY: import.meta.env.VITE_FUNCTION_KEY || 'X_Afg-nMAJHR5lWoaMLEzv-R5iUmEcKRWFAEO_LWqSaJAzFuOOxxYw==',
+  FUNCTION_KEY: import.meta.env.VITE_FUNCTION_KEY || '',
   ENDPOINTS: {
     GET_SHAREPOINT_DATA: '/api/GetSharePointData'
   }
