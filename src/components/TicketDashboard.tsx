@@ -12,58 +12,181 @@ interface UserInfo {
 }
 
 export function TicketDashboard() {
-  const { instance, accounts } = useMsal();
+  // MSAL hooks must be called unconditionally at the top of the component
+  const msal = useMsal();
   const isAuthenticated = useIsAuthenticated();
+  
   const [tickets, setTickets] = useState<SharePointTicket[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [authAvailable, setAuthAvailable] = useState(true);
+
+  // Check if MSAL is working properly
+  useEffect(() => {
+    try {
+      // Test if MSAL is functioning
+      if (msal && msal.instance) {
+        setAuthAvailable(true);
+      } else {
+        setAuthAvailable(false);
+      }
+    } catch (error) {
+      console.warn('MSAL not working properly:', error);
+      setAuthAvailable(false);
+    }
+  }, [msal]);
 
   const handleLogin = async () => {
+    if (!authAvailable || !msal) {
+      setError('Authentication service är inte tillgänglig');
+      return;
+    }
+    
     try {
-      await instance.loginPopup(loginRequest);
+      await msal.instance.loginPopup(loginRequest);
     } catch (error) {
       console.error('Login failed:', error);
+      setError('Inloggning misslyckades. Försök igen senare.');
     }
   };
 
   const handleLogout = () => {
-    instance.logoutPopup();
+    if (authAvailable && msal) {
+      msal.instance.logoutPopup();
+    }
   };
 
+  // Mock data for when API is unavailable
+  const getMockTickets = (): SharePointTicket[] => [
+    {
+      Id: "demo-1",
+      CreatedBy: {
+        User: {
+          DisplayName: "Demo User",
+          Id: "demo-id",
+          email: "demo@example.com"
+        }
+      },
+      CreatedDateTime: new Date().toISOString(),
+      LastModifiedBy: {
+        User: {
+          DisplayName: "Demo User",
+          Id: "demo-id",
+          email: "demo@example.com"
+        }
+      },
+      LastModifiedDateTime: new Date().toISOString(),
+      ContentType: {
+        Id: "demo-content-type",
+        Name: "Item"
+      },
+      ParentReference: {
+        Id: "demo-parent",
+        SiteId: "demo-site"
+      },
+      WebUrl: "https://demo.sharepoint.com/demo",
+      ETag: "demo-etag",
+      Fields: {
+        Title: "Demo Ticket - Tjänsten är otillgänglig",
+        Description: "Detta är demo-data som visas när SharePoint-tjänsten inte är tillgänglig.",
+        Status: "Info",
+        Priority: "Låg"
+      }
+    },
+    {
+      Id: "demo-2",
+      CreatedBy: {
+        User: {
+          DisplayName: "System",
+          Id: "system-id",
+          email: "system@example.com"
+        }
+      },
+      CreatedDateTime: new Date(Date.now() - 86400000).toISOString(),
+      LastModifiedBy: {
+        User: {
+          DisplayName: "System",
+          Id: "system-id", 
+          email: "system@example.com"
+        }
+      },
+      LastModifiedDateTime: new Date(Date.now() - 3600000).toISOString(),
+      ContentType: {
+        Id: "demo-content-type-2",
+        Name: "Item"
+      },
+      ParentReference: {
+        Id: "demo-parent-2",
+        SiteId: "demo-site-2"
+      },
+      WebUrl: "https://demo.sharepoint.com/demo2",
+      ETag: "demo-etag-2",
+      Fields: {
+        Title: "Applikationen fungerar ändå!",
+        Description: "Även när backend-tjänsten är nere kan användarna se denna information.",
+        Status: "Öppen",
+        Priority: "Medium"
+      }
+    }
+  ];
+
   const loadTickets = useCallback(async () => {
-    if (!isAuthenticated) return;
-    
     setLoading(true);
     setError(null);
     
     try {
-      // Get user token for authenticated API call
-      const account = accounts[0];
-      const response = await instance.acquireTokenSilent({
-        ...loginRequest,
-        account: account,
-      });
+      let userToken = undefined;
       
-      const userToken = response.accessToken;
+      // Try to get user token if authenticated and MSAL is available
+      if (isAuthenticated && authAvailable && msal && msal.accounts.length > 0) {
+        try {
+          const account = msal.accounts[0];
+          const response = await msal.instance.acquireTokenSilent({
+            ...loginRequest,
+            account: account,
+          });
+          userToken = response.accessToken;
+          setUserInfo(account);
+        } catch (tokenError) {
+          console.warn('Failed to acquire token, falling back to function key auth:', tokenError);
+        }
+      }
+      
+      // Try to load tickets from API
       const data = await sharePointApi.getSharePointTickets(userToken);
       setTickets(data);
-      setUserInfo(account);
+      
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ett oväntat fel inträffade');
       console.error('Error loading tickets:', err);
+      setError('Kunde inte ladda data från SharePoint. Tjänsten kanske är otillgänglig för tillfället.');
+      
+      // Show mock data as fallback
+      setTickets(getMockTickets());
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, instance, accounts]);
+  }, [isAuthenticated, authAvailable, msal]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      loadTickets();
-    }
-  }, [isAuthenticated, loadTickets]);
+    // Always try to load tickets, regardless of authentication state
+    loadTickets();
+  }, [loadTickets]);
 
-  if (!isAuthenticated) {
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Laddar tickets från SharePoint...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated and auth is available, show login
+  if (!isAuthenticated && authAvailable) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center p-8 bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-white/20">
@@ -82,39 +205,17 @@ export function TicketDashboard() {
           >
             🔐 Logga in med Microsoft
           </button>
+          {!authAvailable && (
+            <p className="mt-4 text-sm text-orange-600">
+              ⚠️ Authentication-tjänsten är tillfälligt otillgänglig
+            </p>
+          )}
         </div>
       </div>
     );
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Laddar tickets från SharePoint...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center p-8 bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-white/20">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">❌ Kunde inte ladda tickets</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button 
-            onClick={loadTickets}
-            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-colors"
-          >
-            Försök igen
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  // Main dashboard view
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
@@ -129,7 +230,9 @@ export function TicketDashboard() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">SharePoint Tickets</h1>
-                <p className="text-sm text-gray-600">Välkommen, {userInfo?.name || userInfo?.username}</p>
+                <p className="text-sm text-gray-600">
+                  {isAuthenticated ? `Välkommen, ${userInfo?.name || userInfo?.username}` : 'Demo läge - Begränsad funktionalitet'}
+                </p>
               </div>
             </div>
             
@@ -144,15 +247,24 @@ export function TicketDashboard() {
                 </svg>
                 <span>Uppdatera</span>
               </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span>Logga ut</span>
-              </button>
+              
+              {isAuthenticated && authAvailable && (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span>Logga ut</span>
+                </button>
+              )}
+              
+              {!authAvailable && (
+                <span className="px-4 py-2 bg-orange-100 text-orange-800 rounded-lg text-sm">
+                  ⚠️ Offline läge
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -160,6 +272,20 @@ export function TicketDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {error && (
+          <div className="mb-6 p-4 bg-orange-100 border border-orange-300 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-orange-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <p className="text-orange-800 font-medium">Varning</p>
+                <p className="text-orange-700 text-sm">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {tickets.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
@@ -168,13 +294,17 @@ export function TicketDashboard() {
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-gray-700 mb-2">Inga tickets hittades</h3>
-            <p className="text-gray-500">Du har ingen åtkomst till tickets eller så finns det inga.</p>
+            <p className="text-gray-500">
+              {isAuthenticated 
+                ? 'Du har ingen åtkomst till tickets eller så finns det inga.' 
+                : 'Logga in för att se dina tickets.'}
+            </p>
           </div>
         ) : (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-800">
-                Dina Tickets ({tickets.length})
+                {isAuthenticated ? 'Dina Tickets' : 'Demo Tickets'} ({tickets.length})
               </h2>
               <div className="text-sm text-gray-500">
                 Senast uppdaterad: {new Date().toLocaleString('sv-SE')}
