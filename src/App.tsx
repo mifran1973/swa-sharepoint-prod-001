@@ -3,6 +3,7 @@ import { MsalProvider } from '@azure/msal-react'
 import { PublicClientApplication } from '@azure/msal-browser'
 import { msalConfig } from './config/authConfig'
 import { TicketDashboard } from './components/TicketDashboard'
+import { DiagnosticPage } from './components/DiagnosticPage'
 import './App.css'
 
 // Error Boundary Component
@@ -82,21 +83,44 @@ function initializeMSAL(): PublicClientApplication | null {
 }
 
 function App() {
+  console.log('🚀 App component starting...');
+  console.log('Environment mode:', import.meta.env.MODE);
+  console.log('Current URL:', window.location.href);
+  
   const [msalInstance, setMsalInstance] = useState<PublicClientApplication | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
 
+  // Check if we should show diagnostic page
+  const showDiagnostic = window.location.search.includes('debug') || window.location.pathname.includes('debug');
+  console.log('Show diagnostic page:', showDiagnostic);
+
   useEffect(() => {
+    console.log('🔧 App useEffect - initializing MSAL...');
     try {
       const instance = initializeMSAL();
+      console.log('✅ MSAL instance created:', !!instance);
       setMsalInstance(instance);
     } catch (error) {
-      console.error('MSAL initialization failed:', error);
+      console.error('❌ MSAL initialization failed:', error);
       setAuthError('Authentication service unavailable');
     }
   }, []);
 
+  // Show diagnostic page if requested
+  if (showDiagnostic) {
+    console.log('🔍 Rendering diagnostic page');
+    return (
+      <ErrorBoundary>
+        <div className="app">
+          <DiagnosticPage />
+        </div>
+      </ErrorBoundary>
+    );
+  }
+
   // If MSAL failed to initialize, show app without authentication
   if (authError || msalInstance === null) {
+    console.log('⚠️ Rendering without MSAL authentication, authError:', authError, 'msalInstance:', !!msalInstance);
     return (
       <ErrorBoundary>
         <div className="app">
@@ -107,6 +131,7 @@ function App() {
   }
 
   // Normal flow with MSAL authentication
+  console.log('✅ Rendering with MSAL authentication');
   return (
     <ErrorBoundary>
       <MsalProvider instance={msalInstance}>
