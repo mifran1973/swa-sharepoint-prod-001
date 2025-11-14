@@ -58,7 +58,7 @@ namespace SharePointFunction
 
                 // Implementera On-Behalf-Of flow
                 var graphClient = await GetGraphClientWithUserContext(userToken);
-                
+
                 // Hämta SharePoint data med användarens behörigheter
                 var sharePointData = await GetSharePointTicketsForUser(graphClient);
 
@@ -235,13 +235,13 @@ namespace SharePointFunction
         {
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json; charset=utf-8");
-            
-            var json = JsonSerializer.Serialize(data, new JsonSerializerOptions 
-            { 
+
+            var json = JsonSerializer.Serialize(data, new JsonSerializerOptions
+            {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 WriteIndented = true
             });
-            
+
             response.WriteString(json);
             return response;
         }
@@ -250,10 +250,10 @@ namespace SharePointFunction
         {
             var response = req.CreateResponse(statusCode);
             response.Headers.Add("Content-Type", "application/json; charset=utf-8");
-            
+
             var error = new { error = message, timestamp = DateTime.UtcNow };
             var json = JsonSerializer.Serialize(error);
-            
+
             response.WriteString(json);
             return response;
         }
@@ -270,7 +270,7 @@ namespace SharePointFunction
     public class BaseBearerTokenAuthenticationProvider : IAuthenticationProvider
     {
         private readonly TokenProvider _tokenProvider;
-        
+
         public BaseBearerTokenAuthenticationProvider(TokenProvider tokenProvider)
         {
             _tokenProvider = tokenProvider;
@@ -288,6 +288,7 @@ namespace SharePointFunction
 ### 2. Uppdatera Azure AD App Registration
 
 Lägg till delegated permissions:
+
 ```bash
 az ad app permission add \
   --id 110bbc9c-7b2c-4364-afad-b954953e3b7b \
@@ -323,7 +324,7 @@ var host = new HostBuilder()
     {
         // Lägg till konfiguration
         services.AddSingleton<IConfiguration>(context.Configuration);
-        
+
         // Lägg till övriga services om behövs
     })
     .Build();
@@ -334,6 +335,7 @@ host.Run();
 ### 5. Uppdatera project file (.csproj)
 
 Lägg till NuGet packages:
+
 ```xml
 <PackageReference Include="Microsoft.Graph" Version="5.50.0" />
 <PackageReference Include="Microsoft.Identity.Client" Version="4.56.0" />
@@ -342,12 +344,14 @@ Lägg till NuGet packages:
 ## 🎯 RESULTAT EFTER IMPLEMENTATION
 
 ### ✅ Säkerhetsfördelar:
+
 - **Användarspecifik data**: Varje användare ser endast SharePoint-data de har behörighet till
 - **Inga exponerade secrets**: Function Key tagen bort från frontend
 - **Audit trail**: Alla API-anrop loggas med rätt användare
 - **Principle of least privilege**: Följer säkerhetsbästa praxis
 
 ### ✅ Tekniska fördelar:
+
 - **On-Behalf-Of flow**: Använder användarens token för SharePoint-åtkomst
 - **Robust felhantering**: Tydliga felmeddelanden
 - **Detaljerad logging**: För debugging och monitoring
@@ -364,6 +368,7 @@ Lägg till NuGet packages:
 ## ⚠️ VIKTIGT
 
 Efter denna implementation kommer:
+
 - Frontend att kräva authentication
 - Användare att se endast data de har tillgång till
 - Function Key att inte längre fungera
