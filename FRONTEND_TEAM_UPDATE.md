@@ -2,7 +2,7 @@
 
 ## 📢 VIKTIGT MEDDELANDE TILL FRONTEND TEAM
 
-🎉 **Azure Function är nu LIVE med användarspecifik säkerhet!** 
+🎉 **Azure Function är nu LIVE med användarspecifik säkerhet!**
 
 ✅ **BEKRÄFTAT FUNGERAR**: API:et implementerar nu On-Behalf-Of flow och användar-isolation  
 🚨 **FRONTEND UPPDATERING BEHÖVS**: Response format har ändrats - se nedan
@@ -12,15 +12,17 @@
 ### **🚨 BREAKING CHANGE #1: Response Format**
 
 #### ❌ **Före (direkt array):**
+
 ```javascript
-const response = await fetch('/api/GetSharePointData');
+const response = await fetch("/api/GetSharePointData");
 const items = await response.json(); // Direkt array av SharePoint items
 ```
 
 #### ✅ **Nu (objekt med Items property):**
+
 ```javascript
-const response = await fetch('/api/GetSharePointData');
-const data = await response.json(); 
+const response = await fetch("/api/GetSharePointData");
+const data = await response.json();
 const items = data.Items; // Array är nu inne i Items property
 ```
 
@@ -46,49 +48,53 @@ const items = data.Items; // Array är nu inne i Items property
 ### **1. Uppdatera Response Parsing (OBLIGATORISKT)**
 
 #### Nuvarande kod som INTE fungerar längre:
+
 ```javascript
-const response = await fetch('/api/GetSharePointData', {
-    headers: { 'Authorization': `Bearer ${userToken}` }
+const response = await fetch("/api/GetSharePointData", {
+  headers: { Authorization: `Bearer ${userToken}` },
 });
 const items = await response.json(); // ❌ DETTA FUNGERAR INTE LÄNGRE
 ```
 
 #### Uppdaterad kod som fungerar:
+
 ```javascript
-const response = await fetch('/api/GetSharePointData', {
-    headers: { 'Authorization': `Bearer ${userToken}` }
+const response = await fetch("/api/GetSharePointData", {
+  headers: { Authorization: `Bearer ${userToken}` },
 });
 const data = await response.json();
 const items = data.Items; // ✅ Items är nu inne i data-objektet
 
 // Bonus - ny användarkontext tillgänglig:
-console.log('Inloggad användare:', data.UserContext?.UserName);
-console.log('Säkerhetstyp:', data.AuthenticationType);
-console.log('Antal items:', data.ItemCount);
+console.log("Inloggad användare:", data.UserContext?.UserName);
+console.log("Säkerhetstyp:", data.AuthenticationType);
+console.log("Antal items:", data.ItemCount);
 ```
 
 ### **2. Lägg till 403 Forbidden Error Handling (OBLIGATORISKT)**
 
 ```javascript
-const response = await fetch('/api/GetSharePointData', {
-    headers: { 'Authorization': `Bearer ${userToken}` }
+const response = await fetch("/api/GetSharePointData", {
+  headers: { Authorization: `Bearer ${userToken}` },
 });
 
 // Nya error codes som måste hanteras:
 if (response.status === 403) {
-    // ❌ Användaren har inte SharePoint-behörighet
-    alert('Du har inte behörighet att komma åt denna SharePoint-data. Kontakta din IT-administrator.');
-    return;
+  // ❌ Användaren har inte SharePoint-behörighet
+  alert(
+    "Du har inte behörighet att komma åt denna SharePoint-data. Kontakta din IT-administrator."
+  );
+  return;
 }
 
 if (response.status === 401) {
-    // ❌ Token expired eller ogiltig  
-    await refreshUserToken();
-    return;
+  // ❌ Token expired eller ogiltig
+  await refreshUserToken();
+  return;
 }
 
 if (!response.ok) {
-    throw new Error(`API Error: ${response.status}`);
+  throw new Error(`API Error: ${response.status}`);
 }
 
 const data = await response.json();
@@ -102,9 +108,9 @@ Se till att din MSAL konfiguration begär rätt scope:
 ```javascript
 // authConfig.js - kontrollera att detta scope finns:
 const loginRequest = {
-    scopes: [
-        'Sites.Read.All'  // ✅ OBLIGATORISKT för SharePoint-åtkomst
-    ]
+  scopes: [
+    "Sites.Read.All", // ✅ OBLIGATORISKT för SharePoint-åtkomst
+  ],
 };
 ```
 
@@ -245,11 +251,13 @@ const loginRequest = {
 ## ✅ FRONTEND ÄNDRINGS-CHECKLIST
 
 ### **🚨 KRITISKT (Måste göras för att applikationen ska fungera):**
-- [ ] **Response parsing**: Ändra `response.json()` till `response.json().Items`  
-- [ ] **403 Error handling**: Lägg till graceful handling för access denied  
+
+- [ ] **Response parsing**: Ändra `response.json()` till `response.json().Items`
+- [ ] **403 Error handling**: Lägg till graceful handling för access denied
 - [ ] **Token scopes**: Verifiera att `Sites.Read.All` begärs i MSAL config
 
 ### **📈 REKOMMENDERAT (För bättre användarupplevelse):**
+
 - [ ] Logga användarkontext för debugging (`data.UserContext.UserName`)
 - [ ] Visa antal items i UI (`data.ItemCount`)
 - [ ] Implementera retry-logik för 401 errors
