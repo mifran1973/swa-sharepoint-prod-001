@@ -5,6 +5,7 @@ En modern, säker och skalbar SharePoint-integration byggd med Azure Functions o
 ## 📋 Översikt
 
 Denna applikation består av två huvudkomponenter:
+
 1. **Azure Function** - Backend API som hämtar data från SharePoint via Microsoft Graph
 2. **React Dashboard** - Frontend som visar tickets i en modern, responsiv UI
 
@@ -22,6 +23,7 @@ Denna applikation består av två huvudkomponenter:
 ## ⚡ Funktioner
 
 ### 🎨 Frontend (React + TypeScript)
+
 - **Modern UI Design** - Glassmorphism med gradient-bakgrunder
 - **Responsiv Layout** - Fungerar på desktop, tablet och mobil
 - **Real-time Data** - Visar aktuella SharePoint-tickets
@@ -30,6 +32,7 @@ Denna applikation består av två huvudkomponenter:
 - **TypeScript** - Typsäkerhet och bättre utvecklarupplevelse
 
 ### 🔧 Backend (Azure Functions)
+
 - **Modern Graph SDK** - Använder Microsoft Graph SDK 5.x
 - **Managed Identity** - Säker autentisering utan lösenord
 - **Robust Error Handling** - Hantering av API-begränsningar och fel
@@ -37,12 +40,14 @@ Denna applikation består av två huvudkomponenter:
 - **Function Key Security** - Skyddad API-access
 
 ### 🛡️ Säkerhet
+
 - **Azure AD Integration** - Managed Identity för SharePoint-åtkomst
 - **Function Key Authentication** - Säker API-access
 - **CORS Configuration** - Begränsat till godkända domäner
 - **Secret Management** - Säker hantering av API-nycklar via GitHub Secrets
 
 ### 🚀 DevOps & Deployment
+
 - **GitHub Actions** - Automatisk CI/CD pipeline
 - **Azure Static Web Apps** - Skalbar hosting med CDN
 - **Environment Variables** - Säker konfigurationshantering
@@ -76,6 +81,7 @@ swa-sharepoint-prod-001/
 ## 🔧 Installation & Setup
 
 ### Förutsättningar
+
 - Node.js 18+
 - Azure CLI
 - Git
@@ -85,24 +91,29 @@ swa-sharepoint-prod-001/
   - Azure Static Web Apps
 
 ### 1. Klona Repository
+
 ```bash
 git clone https://github.com/mifran1973/swa-sharepoint-prod-001.git
 cd swa-sharepoint-prod-001
 ```
 
 ### 2. Installera Dependencies
+
 ```bash
 npm install
 ```
 
 ### 3. Miljövariabler
+
 Skapa `.env.local` för lokal utveckling:
+
 ```env
 VITE_AZURE_FUNCTION_URL=https://your-function-app.azurewebsites.net
 VITE_FUNCTION_KEY=your-function-key
 ```
 
 ### 4. Lokal Utveckling
+
 ```bash
 npm run dev
 ```
@@ -115,6 +126,7 @@ Azure Function:en hanterar SharePoint-integration och är redan deployad till:
 `https://func-sharepoint-prod-001-hmeqadf6h0g9cng8.westeurope-01.azurewebsites.net`
 
 ### Funktioner:
+
 - **GetSharePointData** - Hämtar tickets från SharePoint Lists
 - **Managed Identity** - Säker åtkomst till SharePoint
 - **Error Handling** - Robust felhantering med retry-logik
@@ -122,11 +134,13 @@ Azure Function:en hanterar SharePoint-integration och är redan deployad till:
 ## 🚀 Deployment
 
 ### Automatisk Deployment
+
 Applikationen deployas automatiskt till Azure Static Web Apps när kod pushes till `main` branch.
 
 **Live URL:** https://white-field-0b0ad7303.3.azurestaticapps.net
 
 ### GitHub Actions Workflow
+
 1. **Build** - Kompilerar TypeScript och bygger React app
 2. **Environment Variables** - Injicerar miljövariabler vid build
 3. **Deploy** - Deployas till Azure Static Web Apps
@@ -135,21 +149,26 @@ Applikationen deployas automatiskt till Azure Static Web Apps när kod pushes ti
 ## 🔐 Säkerhetskonfiguration
 
 ### Function App
+
 - **Authorization Level:** Function Key Required
 - **CORS:** Begränsat till Static Web App URL
 - **Managed Identity:** Aktiverat för SharePoint åtkomst
 
 ### SharePoint Permissions
+
 Azure Function har följande Microsoft Graph permissions:
+
 - `Sites.Read.All` - Läsa SharePoint sites
 - `User.Read.All` - Läsa användarinformation
 
 ## 📊 API Endpoints
 
 ### GET /api/GetSharePointData
+
 Hämtar alla tickets från SharePoint Lists.
 
 **Response:**
+
 ```json
 [
   {
@@ -166,7 +185,7 @@ Hämtar alla tickets från SharePoint Lists.
     "WebUrl": "https://xzk57.sharepoint.com/sites/itsupport/Lists/Tickets/164_.000",
     "Fields": {
       "Title": "Ticket Title",
-      "Description": "Ticket Description", 
+      "Description": "Ticket Description",
       "Status": "Open",
       "Priority": "High"
     }
@@ -177,12 +196,14 @@ Hämtar alla tickets från SharePoint Lists.
 ## 🎨 UI/UX Features
 
 ### Design System
+
 - **Glassmorphism** - Modern transparent design med blur-effekter
 - **Gradient Backgrounds** - Dynamiska färgövergångar
 - **Status Colors** - Färgkodade status-badges
 - **Responsive Design** - Anpassar sig till alla skärmstorlekar
 
 ### Accessibility
+
 - **Semantic HTML** - Korrekt användning av HTML-element
 - **ARIA Labels** - Tillgänglighet för skärmläsare
 - **Keyboard Navigation** - Full keyboard support
@@ -202,17 +223,20 @@ Hämtar alla tickets från SharePoint Lists.
 **Lösning:** Kontrollera environment variables i GitHub Secrets
 
 ### Debug Information
+
 Applikationen loggar API-anrop i browser console för felsökning.
 
 ## 📈 Prestanda
 
 ### Build Optimizations
+
 - **Vite** - Snabb byggprocess med ES modules
 - **Tree Shaking** - Tar bort oanvänd kod
 - **Code Splitting** - Delar upp kod för snabbare laddning
 - **CDN** - Azure Static Web Apps levererar via globalt CDN
 
 ### Monitoring
+
 - **Azure Application Insights** - Integrerat i Function App
 - **Real User Monitoring** - Prestanda från slutanvändare
 - **Error Tracking** - Automatisk felrapportering
@@ -239,6 +263,7 @@ Detta projekt är licensierat under MIT License - se [LICENSE](LICENSE) fil för
 ## 📞 Support
 
 För frågor eller support, kontakta:
+
 - **Email:** mifran@xzk57.onmicrosoft.com
 - **GitHub Issues:** [Skapa ett issue](https://github.com/mifran1973/swa-sharepoint-prod-001/issues)
 

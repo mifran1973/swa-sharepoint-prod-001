@@ -7,19 +7,24 @@ Your Azure Function is failing because the **Managed Identity doesn't have permi
 ## 📋 **Step-by-Step Fix (Azure Portal)**
 
 ### **Step 1: Open Azure Portal**
+
 1. Go to [Azure Portal](https://portal.azure.com)
 2. Search for **"func-sharepoint-prod-001"**
 3. Click on your Function App
 
 ### **Step 2: Enable Managed Identity (Already Done)**
+
 ✅ **VERIFIED:** Your Function App already has System Assigned Managed Identity enabled:
+
 - Principal ID: `6e5844bc-5996-48a7-a3b4-c4d3c4c0c5f8`
 - Tenant ID: `14f493f8-7990-4a8d-9885-37e35f0fe7d3`
 
 ### **Step 3: Assign Microsoft Graph Permissions**
 
 #### **Option A: Via Azure Portal (Recommended)**
+
 1. **Navigate to Azure Active Directory:**
+
    - In Azure Portal, search for **"Azure Active Directory"**
    - Go to **Enterprise Applications**
    - Search for **"func-sharepoint-prod-001"**
@@ -37,6 +42,7 @@ Your Azure Function is failing because the **Managed Identity doesn't have permi
    - Click **"Grant admin consent"** ⚠️ **IMPORTANT**
 
 #### **Option B: Via PowerShell (Advanced)**
+
 ```powershell
 # Connect to Microsoft Graph
 Connect-MgGraph -Scopes "Application.ReadWrite.All", "AppRoleAssignment.ReadWrite.All"
@@ -59,12 +65,14 @@ New-MgServicePrincipalAppRoleAssignment -ServicePrincipalId $functionAppSP.Id -P
 ## 🧪 **Test After Permission Assignment**
 
 ### **Test 1: Function Endpoint**
+
 ```bash
 # Test the Function directly
 curl -X GET "https://func-sharepoint-prod-001-hmeqadf6h0g9cng8.westeurope-01.azurewebsites.net/api/GetSharePointData?code=xo6_67J3Bs7xR40dznwcV_yQhNn4bi38Ikw_Xfc1r1kvAzFu3Hb1nw=="
 ```
 
 **Expected Success Response:**
+
 ```json
 {
   "AuthenticationType": "ManagedIdentity",
@@ -79,8 +87,10 @@ curl -X GET "https://func-sharepoint-prod-001-hmeqadf6h0g9cng8.westeurope-01.azu
 }
 ```
 
-### **Test 2: Frontend Integration** 
+### **Test 2: Frontend Integration**
+
 After GitHub Actions completes (~5 minutes):
+
 1. Visit: https://white-field-0b0ad7303.3.azurestaticapps.net
 2. Try to login
 3. Should see SharePoint data
@@ -107,13 +117,13 @@ New-MgServicePrincipalAppRoleAssignment -ServicePrincipalId $sp.Id -PrincipalId 
 
 ## 📊 **Current Status**
 
-| Issue | Status | Solution |
-|-------|--------|----------|
-| ✅ Azure Function Config | FIXED | Azure AD settings added |
-| ✅ Frontend Auth Config | DEPLOYED | GitHub Actions running |
-| ⚠️ Graph Permissions | **PENDING** | **← YOU ARE HERE** |
-| ❌ 500 Error | ACTIVE | Will fix after permissions |
-| ❌ 400 Error | ACTIVE | Should fix with frontend update |
+| Issue                    | Status      | Solution                        |
+| ------------------------ | ----------- | ------------------------------- |
+| ✅ Azure Function Config | FIXED       | Azure AD settings added         |
+| ✅ Frontend Auth Config  | DEPLOYED    | GitHub Actions running          |
+| ⚠️ Graph Permissions     | **PENDING** | **← YOU ARE HERE**              |
+| ❌ 500 Error             | ACTIVE      | Will fix after permissions      |
+| ❌ 400 Error             | ACTIVE      | Should fix with frontend update |
 
 ---
 

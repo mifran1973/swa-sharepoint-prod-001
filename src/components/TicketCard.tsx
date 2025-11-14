@@ -1,5 +1,5 @@
-import type { SharePointTicket } from '../types/sharepoint';
-import { sharePointApi } from '../services/sharePointApi';
+import type { SharePointTicket } from "../types/sharepoint";
+import { sharePointApi } from "../services/sharePointApi";
 
 interface TicketCardProps {
   ticket: SharePointTicket;
@@ -19,7 +19,7 @@ export function TicketCard({ ticket }: TicketCardProps) {
           </span>
         </div>
       </div>
-      
+
       <div className="ticket-details">
         {ticket.Fields?.Title && (
           <div className="detail-row">
@@ -33,22 +33,34 @@ export function TicketCard({ ticket }: TicketCardProps) {
         )}
         {ticket.Fields?.Status && (
           <div className="detail-row">
-            <strong>Status:</strong> <span className={`status-badge status-${ticket.Fields.Status.toLowerCase()}`}>{ticket.Fields.Status}</span>
+            <strong>Status:</strong>{" "}
+            <span
+              className={`status-badge status-${ticket.Fields.Status.toLowerCase()}`}
+            >
+              {ticket.Fields.Status}
+            </span>
           </div>
         )}
         {ticket.Fields?.Priority && (
           <div className="detail-row">
-            <strong>Prioritet:</strong> <span className={`priority-badge priority-${ticket.Fields.Priority.toLowerCase()}`}>{ticket.Fields.Priority}</span>
+            <strong>Prioritet:</strong>{" "}
+            <span
+              className={`priority-badge priority-${ticket.Fields.Priority.toLowerCase()}`}
+            >
+              {ticket.Fields.Priority}
+            </span>
           </div>
         )}
         <div className="detail-row">
-          <strong>Skapad av:</strong> {sharePointApi.getDisplayName(ticket.CreatedBy)}
+          <strong>Skapad av:</strong>{" "}
+          {sharePointApi.getDisplayName(ticket.CreatedBy)}
         </div>
         <div className="detail-row">
           <strong>Email:</strong> {sharePointApi.getEmail(ticket.CreatedBy)}
         </div>
         <div className="detail-row">
-          <strong>Senast ändrad av:</strong> {sharePointApi.getDisplayName(ticket.LastModifiedBy)}
+          <strong>Senast ändrad av:</strong>{" "}
+          {sharePointApi.getDisplayName(ticket.LastModifiedBy)}
         </div>
         <div className="detail-row">
           <strong>Content Type:</strong> {ticket.ContentType.Name}
@@ -56,9 +68,9 @@ export function TicketCard({ ticket }: TicketCardProps) {
       </div>
 
       <div className="ticket-actions">
-        <a 
-          href={ticket.WebUrl} 
-          target="_blank" 
+        <a
+          href={ticket.WebUrl}
+          target="_blank"
           rel="noopener noreferrer"
           className="view-link"
         >

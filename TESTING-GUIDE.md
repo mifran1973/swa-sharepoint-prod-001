@@ -110,7 +110,7 @@ För att aktivera full user authentication behöver Azure Function uppdateras:
 ```json
 {
   "AZURE_CLIENT_ID": "<your-azure-client-id>",
-  "AZURE_CLIENT_SECRET": "<your-azure-client-secret>",  
+  "AZURE_CLIENT_SECRET": "<your-azure-client-secret>",
   "AZURE_TENANT_ID": "<your-azure-tenant-id>"
 }
 ```

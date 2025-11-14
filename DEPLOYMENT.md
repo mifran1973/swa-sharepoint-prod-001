@@ -1,6 +1,7 @@
 # Azure Deployment Guide
 
 ## Förutsättningar
+
 - Azure CLI installerat och inloggat (`az login`)
 - GitHub repository (skapa ett och push:a denna kod)
 - Azure Function App redan deployad (din `func-sharepoint-prod-001`)
@@ -52,6 +53,7 @@ az functionapp cors add \
 ## Alternativ: Via Azure Portal
 
 ### 1. Skapa Static Web App
+
 - Gå till Azure Portal → Create Resource → Static Web App
 - Koppla till ditt GitHub repository
 - Sätt build settings:
@@ -60,10 +62,12 @@ az functionapp cors add \
   - Api location: (lämna tom)
 
 ### 2. Environment Variables
+
 - Gå till Static Web App → Configuration
 - Lägg till: `VITE_AZURE_FUNCTION_URL` = `https://func-sharepoint-prod-001.azurewebsites.net`
 
 ### 3. CORS på Function App
+
 - Gå till Function App → CORS
 - Lägg till: `https://din-static-web-app.azurestaticapps.net`
 
@@ -72,6 +76,7 @@ az functionapp cors add \
 GitHub Actions workflow är redan konfigurerad i `.github/workflows/azure-static-web-apps.yml`
 
 Du behöver bara lägga till dessa secrets i GitHub:
+
 - `AZURE_STATIC_WEB_APPS_API_TOKEN` (från Azure Portal)
 - `VITE_AZURE_FUNCTION_URL` (din Function App URL)
 
@@ -85,6 +90,7 @@ Du behöver bara lägga till dessa secrets i GitHub:
 ## Felsökning
 
 ### CORS fel
+
 ```bash
 # Kolla CORS inställningar
 az functionapp cors show --name func-sharepoint-prod-001 --resource-group din-rg
@@ -94,6 +100,7 @@ az functionapp cors add --name func-sharepoint-prod-001 --resource-group din-rg 
 ```
 
 ### Environment Variables
+
 ```bash
 # Lista alla app settings
 az staticwebapp appsettings list --name swa-sharepoint-dashboard

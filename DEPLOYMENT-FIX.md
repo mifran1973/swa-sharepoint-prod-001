@@ -16,14 +16,20 @@
 // src/config/authConfig.ts
 export const msalConfig: Configuration = {
   auth: {
-    clientId: import.meta.env.VITE_AZURE_CLIENT_ID || '110bbc9c-7b2c-4364-afad-b954953e3b7b',
-    authority: `https://login.microsoftonline.com/${import.meta.env.VITE_AZURE_TENANT_ID || '14f493f8-7990-4a8d-9885-37e35f0fe7d3'}`,
-    redirectUri: window.location.origin
-  }
+    clientId:
+      import.meta.env.VITE_AZURE_CLIENT_ID ||
+      "110bbc9c-7b2c-4364-afad-b954953e3b7b",
+    authority: `https://login.microsoftonline.com/${
+      import.meta.env.VITE_AZURE_TENANT_ID ||
+      "14f493f8-7990-4a8d-9885-37e35f0fe7d3"
+    }`,
+    redirectUri: window.location.origin,
+  },
 };
 ```
 
 **Fördelar:**
+
 - ✅ Sidan laddar korrekt nu
 - ✅ Authentication fungerar med hardcoded values
 - ✅ Kan overrides med environment variables
@@ -57,14 +63,19 @@ Efter att environment variables är satta, ta bort hardcoded values:
 // Säker version (efter environment variables är satta)
 export const msalConfig: Configuration = {
   auth: {
-    clientId: import.meta.env.VITE_AZURE_CLIENT_ID || (() => {
-      throw new Error('VITE_AZURE_CLIENT_ID is required');
-    })(),
-    authority: `https://login.microsoftonline.com/${import.meta.env.VITE_AZURE_TENANT_ID || (() => {
-      throw new Error('VITE_AZURE_TENANT_ID is required');
-    })()}`,
-    redirectUri: window.location.origin
-  }
+    clientId:
+      import.meta.env.VITE_AZURE_CLIENT_ID ||
+      (() => {
+        throw new Error("VITE_AZURE_CLIENT_ID is required");
+      })(),
+    authority: `https://login.microsoftonline.com/${
+      import.meta.env.VITE_AZURE_TENANT_ID ||
+      (() => {
+        throw new Error("VITE_AZURE_TENANT_ID is required");
+      })()
+    }`,
+    redirectUri: window.location.origin,
+  },
 };
 ```
 
@@ -73,6 +84,7 @@ export const msalConfig: Configuration = {
 ## 🧪 **Testning**
 
 ### **Före Environment Variables (Nuvarande)**
+
 ```
 ✅ Status: Sidan laddar med hardcoded values
 ✅ Funktionalitet: Authentication fungerar
@@ -80,6 +92,7 @@ export const msalConfig: Configuration = {
 ```
 
 ### **Efter Environment Variables**
+
 ```
 ✅ Status: Sidan laddar med environment values
 ✅ Funktionalitet: Authentication fungerar
@@ -93,18 +106,20 @@ export const msalConfig: Configuration = {
 
 ### **Via Azure Portal:**
 
-1. **Navigation**: 
+1. **Navigation**:
+
    - Portal → Resource Groups → Din Resource Group
    - Eller sök direkt på "white-field-0b0ad7303"
 
 2. **Configuration**:
+
    - Static Web App → Settings → Configuration
    - Application Settings → Add
 
 3. **Environment Variables**:
    - Name: `VITE_AZURE_CLIENT_ID`
    - Value: `110bbc9c-7b2c-4364-afad-b954953e3b7b`
-   - (Upprepa för alla VITE_* variables)
+   - (Upprepa för alla VITE\_\* variables)
 
 ### **Via Azure CLI:**
 
@@ -143,6 +158,7 @@ az staticwebapp appsettings set \
 **URL**: https://white-field-0b0ad7303.3.azurestaticapps.net
 
 **Förväntad funktionalitet:**
+
 - ✅ Sidan laddar (inte längre blank)
 - ✅ Vacker login-skärm visas
 - ✅ Azure AD authentication fungerar
