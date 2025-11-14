@@ -57,80 +57,6 @@ export function TicketDashboard() {
     }
   };
 
-  // Mock data for when API is unavailable
-  const getMockTickets = (): SharePointTicket[] => [
-    {
-      Id: "demo-1",
-      CreatedBy: {
-        User: {
-          DisplayName: "Demo User",
-          Id: "demo-id",
-          email: "demo@example.com"
-        }
-      },
-      CreatedDateTime: new Date().toISOString(),
-      LastModifiedBy: {
-        User: {
-          DisplayName: "Demo User",
-          Id: "demo-id",
-          email: "demo@example.com"
-        }
-      },
-      LastModifiedDateTime: new Date().toISOString(),
-      ContentType: {
-        Id: "demo-content-type",
-        Name: "Item"
-      },
-      ParentReference: {
-        Id: "demo-parent",
-        SiteId: "demo-site"
-      },
-      WebUrl: "https://demo.sharepoint.com/demo",
-      ETag: "demo-etag",
-      Fields: {
-        Title: "Demo Ticket - Tjänsten är otillgänglig",
-        Description: "Detta är demo-data som visas när SharePoint-tjänsten inte är tillgänglig.",
-        Status: "Info",
-        Priority: "Låg"
-      }
-    },
-    {
-      Id: "demo-2",
-      CreatedBy: {
-        User: {
-          DisplayName: "System",
-          Id: "system-id",
-          email: "system@example.com"
-        }
-      },
-      CreatedDateTime: new Date(Date.now() - 86400000).toISOString(),
-      LastModifiedBy: {
-        User: {
-          DisplayName: "System",
-          Id: "system-id", 
-          email: "system@example.com"
-        }
-      },
-      LastModifiedDateTime: new Date(Date.now() - 3600000).toISOString(),
-      ContentType: {
-        Id: "demo-content-type-2",
-        Name: "Item"
-      },
-      ParentReference: {
-        Id: "demo-parent-2",
-        SiteId: "demo-site-2"
-      },
-      WebUrl: "https://demo.sharepoint.com/demo2",
-      ETag: "demo-etag-2",
-      Fields: {
-        Title: "Applikationen fungerar ändå!",
-        Description: "Även när backend-tjänsten är nere kan användarna se denna information.",
-        Status: "Öppen",
-        Priority: "Medium"
-      }
-    }
-  ];
-
   const loadTickets = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -138,31 +64,57 @@ export function TicketDashboard() {
     try {
       let userToken = undefined;
       
-      // Try to get user token if authenticated and MSAL is available
-      if (isAuthenticated && authAvailable && msal && msal.accounts.length > 0) {
-        try {
-          const account = msal.accounts[0];
-          const response = await msal.instance.acquireTokenSilent({
-            ...loginRequest,
-            account: account,
-          });
-          userToken = response.accessToken;
-          setUserInfo(account);
-        } catch (tokenError) {
-          console.warn('Failed to acquire token, falling back to function key auth:', tokenError);
-        }
+      // SÄKERHET: Kräv authentication för att komma åt SharePoint data
+      if (!isAuthenticated || !authAvailable || !msal || msal.accounts.length === 0) {
+        console.warn('⚠️ User not authenticated - cannot load SharePoint tickets');
+        setError('Du måste logga in för att se dina SharePoint tickets.');
+        setTickets([]);
+        return;
+      }
+
+      try {
+        const account = msal.accounts[0];
+        console.log('🔐 Acquiring access token for user:', account.username);
+        
+        const response = await msal.instance.acquireTokenSilent({
+          ...loginRequest,
+          account: account,
+        });
+        userToken = response.accessToken;
+        setUserInfo(account);
+        
+        console.log('✅ Successfully acquired access token, length:', userToken.length);
+      } catch (tokenError) {
+        console.error('❌ Failed to acquire token:', tokenError);
+        setError('Kunde inte hämta säkerhetstoken. Försök logga in igen.');
+        return;
       }
       
-      // Try to load tickets from API
+      // Ladda tickets med användartoken för säker åtkomst
+      console.log('🎫 Loading SharePoint tickets with user permissions...');
       const data = await sharePointApi.getSharePointTickets(userToken);
       setTickets(data);
       
-    } catch (err) {
-      console.error('Error loading tickets:', err);
-      setError('Kunde inte ladda data från SharePoint. Tjänsten kanske är otillgänglig för tillfället.');
+      if (data.length === 0) {
+        setError('Inga tickets hittades. Du kanske inte har behörighet att se några tickets, eller så finns det inga tickets att visa.');
+      } else {
+        console.log(`✅ Successfully loaded ${data.length} tickets`);
+      }
       
-      // Show mock data as fallback
-      setTickets(getMockTickets());
+    } catch (err) {
+      console.error('❌ Error loading tickets:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Okänt fel';
+      
+      if (errorMessage.includes('Authentication required')) {
+        setError('🔐 Du måste logga in för att se dina SharePoint tickets.');
+      } else if (errorMessage.includes('permissions')) {
+        setError('❌ Du har inte behörighet att komma åt dessa SharePoint-data. Kontakta din administratör.');
+      } else {
+        setError(`❌ Kunde inte ladda SharePoint data: ${errorMessage}`);
+      }
+      
+      // Visa inga tickets vid fel
+      setTickets([]);
     } finally {
       setLoading(false);
     }

@@ -4,7 +4,8 @@ import type { SharePointTicket } from '../types/sharepoint';
 const API_CONFIG = {
   // För utveckling och produktion - automatisk identifiering av miljö
   BASE_URL: import.meta.env.VITE_AZURE_FUNCTION_URL || 'https://func-sharepoint-prod-001-hmeqadf6h0g9cng8.westeurope-01.azurewebsites.net',
-  FUNCTION_KEY: import.meta.env.VITE_FUNCTION_KEY || 'xo6_67J3Bs7xR40dznwcV_yQhNn4bi38Ikw_Xfc1r1kvAzFu3Hb1nw==',
+  // SÄKERHET: Ta bort Function Key - använd endast autentiserade anrop
+  // FUNCTION_KEY: 'REMOVED_FOR_SECURITY',
   ENDPOINTS: {
     GET_SHAREPOINT_DATA: '/api/GetSharePointData'
   }
@@ -20,30 +21,22 @@ class SharePointApiService {
       console.log('  User Token Available:', !!userToken);
       console.log('  Token Length:', userToken ? userToken.length : 0);
       
-      // Lägg till function key för säkerhet
-      const urlWithKey = API_CONFIG.FUNCTION_KEY 
-        ? `${url}?code=${API_CONFIG.FUNCTION_KEY}`
-        : url;
+      // SÄKERHET: Kräv användartoken för åtkomst
+      if (!userToken) {
+        throw new Error('🔐 Authentication required: User must be logged in to access SharePoint data');
+      }
       
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userToken}`,
+        'X-User-Context': 'true', // Signal to Azure Function to use user context
       };
 
-      // If userToken is provided, add it to Authorization header for user context
-      if (userToken) {
-        headers['Authorization'] = `Bearer ${userToken}`;
-        headers['X-User-Context'] = 'true'; // Signal to Azure Function to use user context
-        headers['X-Ms-Client-Principal-Name'] = 'user'; // Additional Azure Functions header
-        console.log('  ✅ Adding Authorization header with Bearer token');
-        console.log('  ✅ Adding X-User-Context header');
-      } else {
-        console.log('  ⚠️ No user token - using function key only');
-      }
-      
+      console.log('  ✅ Adding Authorization header with Bearer token');
+      console.log('  ✅ Using secure authenticated request');
       console.log('  Headers being sent:', Object.keys(headers));
-      console.log('  Final URL:', urlWithKey.replace(API_CONFIG.FUNCTION_KEY || '', '***'));
       
-      const response = await fetch(urlWithKey, {
+      const response = await fetch(url, {
         method: 'GET',
         headers,
       });
@@ -60,8 +53,29 @@ class SharePointApiService {
       }
 
       const data = await response.json();
-      console.log('✅ API Response successful, data length:', Array.isArray(data) ? data.length : 'not array');
-      return data;
+      console.log('✅ API Response successful, data type:', typeof data);
+      console.log('✅ Is array:', Array.isArray(data));
+      console.log('✅ Data keys:', Object.keys(data));
+      
+      // Hantera olika responsformat från Azure Function
+      if (Array.isArray(data)) {
+        console.log('✅ Direct array response, length:', data.length);
+        return data as T;
+      } else if (data && data.value && Array.isArray(data.value)) {
+        console.log('✅ OData response with value property, length:', data.value.length);
+        return data.value as T;
+      } else if (data && typeof data === 'object') {
+        console.log('⚠️ Object response, trying to extract array...');
+        // Försök hitta array-property
+        const arrayKeys = Object.keys(data).filter(key => Array.isArray(data[key]));
+        if (arrayKeys.length > 0) {
+          console.log('✅ Found array in property:', arrayKeys[0]);
+          return data[arrayKeys[0]] as T;
+        }
+      }
+      
+      console.warn('⚠️ Unexpected data format, returning as-is');
+      return data as T;
     } catch (error) {
       console.error('❌ API fetch error:', error);
       throw new Error(`Failed to fetch data: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -70,100 +84,30 @@ class SharePointApiService {
 
   async getSharePointTickets(userToken?: string): Promise<SharePointTicket[]> {
     try {
+      if (!userToken) {
+        throw new Error('🔐 Authentication required: Please log in to access your SharePoint tickets');
+      }
+
+      console.log('🎫 Fetching SharePoint tickets for authenticated user...');
+      
       // API:et returnerar direkt en array, inte ett objekt med value property
       const data = await this.fetchFromApi<SharePointTicket[]>(API_CONFIG.ENDPOINTS.GET_SHAREPOINT_DATA, userToken);
+      
+      console.log('✅ Successfully retrieved tickets:', Array.isArray(data) ? data.length : 'invalid format');
+      
       return Array.isArray(data) ? data : [];
     } catch (error) {
-      console.error('Error fetching SharePoint tickets:', error);
+      console.error('❌ Error fetching SharePoint tickets:', error);
       
-      // För utveckling - returnera mock data om API:et inte är tillgängligt
+      // För utveckling - kasta felet vidare för bättre debugging
       if (import.meta.env.DEV) {
-        console.warn('Using mock data for development');
-        return this.getMockData();
+        console.warn('🚧 Development mode - throwing error for debugging');
+        throw error;
       }
       
-      throw error;
+      // I produktion - ge användarvänligt meddelande
+      throw new Error('Could not load SharePoint data. Please check your permissions and try again.');
     }
-  }
-
-  // Mock data för utveckling
-  private getMockData(): SharePointTicket[] {
-    return [
-      {
-        Id: "1",
-        CreatedBy: {
-          User: {
-            DisplayName: "Mikael Fransson",
-            Id: "55cef879-3c26-4d37-b476-abc4c93aa721",
-            email: "mifran@xzk57.onmicrosoft.com"
-          }
-        },
-        CreatedDateTime: "2023-08-30T07:15:34+00:00",
-        LastModifiedBy: {
-          User: {
-            DisplayName: "Mikael Fransson",
-            Id: "55cef879-3c26-4d37-b476-abc4c93aa721",
-            email: "mifran@xzk57.onmicrosoft.com"
-          },
-          Application: {
-            DisplayName: "Koll 365 Ticketing System",
-            Id: "9f7ee4a9-cbdc-4cd2-bfd2-b548fa3fcf25"
-          }
-        },
-        LastModifiedDateTime: "2024-10-18T11:47:38+00:00",
-        ContentType: {
-          Id: "0x0100D3828DB838A7954F9B6650DD3425CE27",
-          Name: "Item"
-        },
-        ParentReference: {
-          Id: "1f68eeb7-b86d-4bbb-85b9-d17a3bfa9ddd",
-          SiteId: "xzk57.sharepoint.com,662692cc-5daf-4766-85d8-8051823dfffa,63b107f3-3092-4203-bcdd-05ef41aad476"
-        },
-        WebUrl: "https://xzk57.sharepoint.com/sites/itsupport/Lists/Tickets/1_.000",
-        ETag: "\"e95841cb-57dd-4d24-b7e4-7e8fc2654577,2\"",
-        Fields: {
-          Title: "Test Ticket 1",
-          Description: "Detta är en test ticket",
-          Status: "Öppen",
-          Priority: "Medium"
-        }
-      },
-      {
-        Id: "2",
-        CreatedBy: {
-          User: {
-            DisplayName: "Mikael Fransson",
-            Id: "55cef879-3c26-4d37-b476-abc4c93aa721",
-            email: "mifran@xzk57.onmicrosoft.com"
-          }
-        },
-        CreatedDateTime: "2023-08-30T07:15:34+00:00",
-        LastModifiedBy: {
-          User: {
-            DisplayName: "Mikael Fransson",
-            Id: "55cef879-3c26-4d37-b476-abc4c93aa721",
-            email: "mifran@xzk57.onmicrosoft.com"
-          }
-        },
-        LastModifiedDateTime: "2024-10-18T11:47:42+00:00",
-        ContentType: {
-          Id: "0x0100D3828DB838A7954F9B6650DD3425CE27",
-          Name: "Item"
-        },
-        ParentReference: {
-          Id: "1f68eeb7-b86d-4bbb-85b9-d17a3bfa9ddd",
-          SiteId: "xzk57.sharepoint.com,662692cc-5daf-4766-85d8-8051823dfffa,63b107f3-3092-4203-bcdd-05ef41aad476"
-        },
-        WebUrl: "https://xzk57.sharepoint.com/sites/itsupport/Lists/Tickets/2_.000",
-        ETag: "\"fb31b738-529a-407f-a4f4-c32d1f3224e2,2\"",
-        Fields: {
-          Title: "Test Ticket 2",
-          Description: "En annan test ticket",
-          Status: "Pågående",
-          Priority: "Hög"
-        }
-      }
-    ];
   }
 
   // Helper method för att formatera datum
