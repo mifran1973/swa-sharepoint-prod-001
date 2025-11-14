@@ -15,7 +15,10 @@ class SharePointApiService {
     const url = `${API_CONFIG.BASE_URL}${endpoint}`;
     
     try {
-      console.log('Fetching from:', url);
+      console.log('🚀 API Request Details:');
+      console.log('  URL:', url);
+      console.log('  User Token Available:', !!userToken);
+      console.log('  Token Length:', userToken ? userToken.length : 0);
       
       // Lägg till function key för säkerhet
       const urlWithKey = API_CONFIG.FUNCTION_KEY 
@@ -30,20 +33,37 @@ class SharePointApiService {
       if (userToken) {
         headers['Authorization'] = `Bearer ${userToken}`;
         headers['X-User-Context'] = 'true'; // Signal to Azure Function to use user context
+        headers['X-Ms-Client-Principal-Name'] = 'user'; // Additional Azure Functions header
+        console.log('  ✅ Adding Authorization header with Bearer token');
+        console.log('  ✅ Adding X-User-Context header');
+      } else {
+        console.log('  ⚠️ No user token - using function key only');
       }
+      
+      console.log('  Headers being sent:', Object.keys(headers));
+      console.log('  Final URL:', urlWithKey.replace(API_CONFIG.FUNCTION_KEY || '', '***'));
       
       const response = await fetch(urlWithKey, {
         method: 'GET',
         headers,
       });
 
+      console.log('📥 API Response:');
+      console.log('  Status:', response.status);
+      console.log('  Status Text:', response.statusText);
+      console.log('  Headers:', [...response.headers.entries()]);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Response Error Body:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('✅ API Response successful, data length:', Array.isArray(data) ? data.length : 'not array');
+      return data;
     } catch (error) {
-      console.error('API fetch error:', error);
+      console.error('❌ API fetch error:', error);
       throw new Error(`Failed to fetch data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
