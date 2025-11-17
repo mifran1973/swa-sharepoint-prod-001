@@ -14,7 +14,11 @@ export const msalConfig: Configuration = {
 };
 
 export const loginRequest = {
-  scopes: ['https://graph.microsoft.com/Sites.Read.All', 'https://graph.microsoft.com/User.Read'],
+  scopes: [
+    'https://graph.microsoft.com/Sites.Read.All',
+    'https://graph.microsoft.com/Sites.ReadWrite.All', 
+    'https://graph.microsoft.com/User.Read'
+  ],
   prompt: 'select_account'
 };
 

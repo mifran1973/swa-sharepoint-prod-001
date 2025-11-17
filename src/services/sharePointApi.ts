@@ -49,24 +49,45 @@ class SharePointApiService {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Response Error Body:', errorText);
+        
+        // Specifik hantering av 403 errors
+        if (response.status === 403) {
+          console.error('🚫 403 Forbidden - SharePoint access denied');
+          console.error('🔍 Possible causes:');
+          console.error('  1. User lacks SharePoint permissions');
+          console.error('  2. MSAL token scopes insufficient');
+          console.error('  3. Azure AD app registration missing delegated permissions');
+          throw new Error(`SharePoint access denied: User lacks permissions to access this data. Contact your administrator.`);
+        }
+        
         throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
 
       const data = await response.json();
       console.log('✅ API Response successful, data type:', typeof data);
       console.log('✅ Is array:', Array.isArray(data));
-      console.log('✅ Data keys:', Object.keys(data));
+      console.log('✅ Data keys:', typeof data === 'object' ? Object.keys(data) : 'N/A');
       
-      // Hantera olika responsformat från Azure Function
-      if (Array.isArray(data)) {
-        console.log('✅ Direct array response, length:', data.length);
+      // Hantera Azure Function On-Behalf-Of response format
+      if (data && data.Items && Array.isArray(data.Items)) {
+        console.log('✅ On-Behalf-Of response with Items property, length:', data.Items.length);
+        console.log('✅ User context:', data.UserContext);
+        console.log('✅ Auth type:', data.AuthenticationType);
+        return data.Items as T;
+      }
+      // Fallback för direkt array (gamla formatet)
+      else if (Array.isArray(data)) {
+        console.log('✅ Direct array response (legacy), length:', data.length);
         return data as T;
-      } else if (data && data.value && Array.isArray(data.value)) {
+      } 
+      // Hantera OData format
+      else if (data && data.value && Array.isArray(data.value)) {
         console.log('✅ OData response with value property, length:', data.value.length);
         return data.value as T;
-      } else if (data && typeof data === 'object') {
+      } 
+      // Försök hitta array i objekt
+      else if (data && typeof data === 'object') {
         console.log('⚠️ Object response, trying to extract array...');
-        // Försök hitta array-property
         const arrayKeys = Object.keys(data).filter(key => Array.isArray(data[key]));
         if (arrayKeys.length > 0) {
           console.log('✅ Found array in property:', arrayKeys[0]);

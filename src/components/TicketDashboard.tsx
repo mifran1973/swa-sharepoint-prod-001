@@ -83,21 +83,45 @@ export function TicketDashboard() {
         const account = msal.accounts[0];
         console.log("🔐 Acquiring access token for user:", account.username);
 
-        const response = await msal.instance.acquireTokenSilent({
-          ...loginRequest,
+        // Begär SharePoint-specifik token med alla nödvändiga scopes
+        const sharePointTokenRequest = {
+          scopes: [
+            'https://graph.microsoft.com/Sites.Read.All',
+            'https://graph.microsoft.com/Sites.ReadWrite.All'
+          ],
           account: account,
-        });
+        };
+
+        const response = await msal.instance.acquireTokenSilent(sharePointTokenRequest);
         userToken = response.accessToken;
         setUserInfo(account);
 
         console.log(
-          "✅ Successfully acquired access token, length:",
+          "✅ Successfully acquired SharePoint access token, length:",
           userToken.length
         );
+        console.log("✅ Token scopes requested:", sharePointTokenRequest.scopes);
       } catch (tokenError) {
         console.error("❌ Failed to acquire token:", tokenError);
-        setError("Kunde inte hämta säkerhetstoken. Försök logga in igen.");
-        return;
+        
+        // Försök med interactive token acquisition om silent misslyckas
+        try {
+          console.log("🔄 Trying interactive token acquisition...");
+          const account = msal.accounts[0];
+          const interactiveResponse = await msal.instance.acquireTokenPopup({
+            scopes: [
+              'https://graph.microsoft.com/Sites.Read.All',
+              'https://graph.microsoft.com/Sites.ReadWrite.All'
+            ],
+            account: account,
+          });
+          userToken = interactiveResponse.accessToken;
+          console.log("✅ Interactive token acquisition successful");
+        } catch (interactiveError) {
+          console.error("❌ Interactive token acquisition failed:", interactiveError);
+          setError("Kunde inte hämta SharePoint-behörigheter. Försök logga ut och in igen.");
+          return;
+        }
       }
 
       // Ladda tickets med användartoken för säker åtkomst
