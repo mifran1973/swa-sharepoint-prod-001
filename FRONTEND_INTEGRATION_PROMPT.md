@@ -54,10 +54,14 @@ const response = await fetch('/api/GetSharePointData', {
 ```javascript
 const loginRequest = {
   scopes: [
-    "Sites.Read.All", // MÅSTE finnas för SharePoint-läsning
-    "Sites.ReadWrite.All", // Om framtida skrivoperationer planeras
+    'https://graph.microsoft.com/Sites.Read.All',        // ✅ FULLSTÄNDIG URL KRÄVS!
+    'https://graph.microsoft.com/Sites.ReadWrite.All'    // ✅ FULLSTÄNDIG URL KRÄVS!
   ],
 };
+
+// 🚨 VIKTIGT: Använd FULLSTÄNDIGA URLs för att undvika 403 errors!
+// ❌ Detta fungerar INTE alltid: scopes: ['Sites.Read.All']
+// ✅ Använd detta istället: scopes: ['https://graph.microsoft.com/Sites.Read.All']
 ```
 
 ✅ IMPLEMENTATION STEG:
@@ -192,6 +196,12 @@ Nytt: `const data = await response.json(); const items = data.Items;`
 🎯 RESULTAT:
 Efter implementation får varje användare endast SharePoint-data de har behörighet till.
 User isolation och säkerhet garanterad av API:et.
+
+🚨 VANLIGT PROBLEM - 403 ERROR FIX:
+Om du får "Du har inte behörighet" errors trots att användaren borde ha access:
+- Kontrollera att MSAL scopes använder FULLSTÄNDIGA URLs
+- ❌ Fel: scopes: ['Sites.Read.All'] 
+- ✅ Rätt: scopes: ['https://graph.microsoft.com/Sites.Read.All']
 
 ```
 

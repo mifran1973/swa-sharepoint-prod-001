@@ -162,12 +162,16 @@ private async fetchFromApi<T>(endpoint: string, userToken?: string): Promise<T> 
 
 ```typescript
 // src/config/authConfig.ts
+// 🚨 VIKTIGT: Använd FULLSTÄNDIGA URLs för att undvika 403 errors!
 export const loginRequest = {
   scopes: [
-    "https://graph.microsoft.com/Sites.Read.All",
-    "https://graph.microsoft.com/Sites.ReadWrite.All",
+    "https://graph.microsoft.com/Sites.Read.All",     // ✅ Korrekt format
+    "https://graph.microsoft.com/Sites.ReadWrite.All", // ✅ Korrekt format
   ],
 };
+
+// ❌ FUNGERAR INTE ALLTID - kort format:
+// scopes: ['Sites.Read.All'] - KAN ORSAKA 403 ERRORS!
 ```
 
 ## 🔍 Säkerhetsfördelar med ny implementation
@@ -198,9 +202,36 @@ export const loginRequest = {
 4. **Fas 4**: Ta bort Function Key
 5. **Fas 5**: Testa med olika användare för att verifiera behörigheter
 
+## 🚨 VANLIGA PROBLEM OCH LÖSNINGAR
+
+### 403 Forbidden Error Fix
+
+**Problem**: User får "Du har inte behörighet att komma åt SharePoint-data" trots att de borde ha access.
+
+**Lösning**: MSAL scopes måste använda fullständiga URLs:
+
+```javascript
+// ❌ Fel - kan orsaka 403 errors:
+scopes: ['Sites.Read.All']
+
+// ✅ Rätt - använd fullständiga URLs:
+scopes: ['https://graph.microsoft.com/Sites.Read.All']
+```
+
+**Exempel på korrekt MSAL config:**
+```javascript
+const loginRequest = {
+  scopes: [
+    'https://graph.microsoft.com/Sites.Read.All',
+    'https://graph.microsoft.com/Sites.ReadWrite.All'
+  ]
+};
+```
+
 ## ⚠️ Viktiga säkerhetskrav
 
 - **ALDRIG** exponera Function Keys i frontend
 - **ALLTID** validera user tokens på server-sidan
 - **ENDAST** returnera data användaren har behörighet till
 - **LOGGA** alla SharePoint-åtkomster för audit
+- **ANVÄND** fullständiga scope URLs i MSAL för att undvika 403 errors
