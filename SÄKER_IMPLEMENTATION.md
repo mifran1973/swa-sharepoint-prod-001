@@ -1,4 +1,4 @@
-# 🔐 SÄKER SHAREPOINT INTEGRATION
+🔐 SÄKER SHAREPOINT INTEGRATION
 
 ## ✅ IMPLEMENTATION SLUTFÖRD
 
@@ -20,6 +20,7 @@
 ## 📋 FRONTEND INTEGRATION BEHÖVS
 
 **Frontend måste uppdateras för att hantera nya response-format:**
+
 - Response format ändrat från direkt array till `data.Items`
 - Nya 403/401 error codes måste hanteras
 - MSAL scopes måste inkludera `Sites.Read.All`
