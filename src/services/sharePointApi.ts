@@ -1,11 +1,24 @@
 import type { SharePointTicket } from '../types/sharepoint';
 
 // Configuration
+const resolvedBaseUrl = (() => {
+  if (import.meta.env.DEV) {
+    return 'http://localhost:7071';
+  }
+
+  const configuredRaw = import.meta.env.VITE_AZURE_FUNCTION_URL;
+  if (configuredRaw) {
+    const sanitized = configuredRaw.trim();
+    if (sanitized.length > 0) {
+      return sanitized.replace(/\/$/, '');
+    }
+  }
+
+  return '';
+})();
+
 const API_CONFIG = {
-  // För utveckling och produktion - automatisk identifiering av miljö
-  BASE_URL: import.meta.env.VITE_AZURE_FUNCTION_URL || 'https://func-sharepoint-prod-001-hmeqadf6h0g9cng8.westeurope-01.azurewebsites.net',
-  // SÄKERHET: Ta bort Function Key - använd endast autentiserade anrop
-  // FUNCTION_KEY: 'REMOVED_FOR_SECURITY',
+  BASE_URL: resolvedBaseUrl,
   ENDPOINTS: {
     GET_SHAREPOINT_DATA: '/api/GetSharePointData'
   }

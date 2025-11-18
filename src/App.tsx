@@ -108,6 +108,7 @@ function App() {
 
   const [msalInstance, setMsalInstance] =
     useState<PublicClientApplication | null>(null);
+  const [isAuthInitializing, setIsAuthInitializing] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Check if we should show diagnostic page
@@ -121,10 +122,20 @@ function App() {
     try {
       const instance = initializeMSAL();
       console.log("✅ MSAL instance created:", !!instance);
-      setMsalInstance(instance);
+
+      if (instance) {
+        setMsalInstance(instance);
+        setAuthError(null);
+      } else {
+        setMsalInstance(null);
+        setAuthError("Authentication configuration saknas eller är ogiltig");
+      }
     } catch (error) {
       console.error("❌ MSAL initialization failed:", error);
+      setMsalInstance(null);
       setAuthError("Authentication service unavailable");
+    } finally {
+      setIsAuthInitializing(false);
     }
   }, []);
 
@@ -135,6 +146,19 @@ function App() {
       <ErrorBoundary>
         <div className="app">
           <DiagnosticPage />
+        </div>
+      </ErrorBoundary>
+    );
+  }
+
+  if (isAuthInitializing) {
+    return (
+      <ErrorBoundary>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+          <div className="text-center p-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Initierar säker autentisering...</p>
+          </div>
         </div>
       </ErrorBoundary>
     );

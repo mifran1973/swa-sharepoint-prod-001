@@ -86,13 +86,15 @@ export function TicketDashboard() {
         // Begär SharePoint-specifik token med alla nödvändiga scopes
         const sharePointTokenRequest = {
           scopes: [
-            'https://graph.microsoft.com/Sites.Read.All',
-            'https://graph.microsoft.com/Sites.ReadWrite.All'
+            "https://graph.microsoft.com/Sites.Read.All",
+            "https://graph.microsoft.com/Sites.ReadWrite.All",
           ],
           account: account,
         };
 
-        const response = await msal.instance.acquireTokenSilent(sharePointTokenRequest);
+        const response = await msal.instance.acquireTokenSilent(
+          sharePointTokenRequest
+        );
         userToken = response.accessToken;
         setUserInfo(account);
 
@@ -100,26 +102,34 @@ export function TicketDashboard() {
           "✅ Successfully acquired SharePoint access token, length:",
           userToken.length
         );
-        console.log("✅ Token scopes requested:", sharePointTokenRequest.scopes);
+        console.log(
+          "✅ Token scopes requested:",
+          sharePointTokenRequest.scopes
+        );
       } catch (tokenError) {
         console.error("❌ Failed to acquire token:", tokenError);
-        
+
         // Försök med interactive token acquisition om silent misslyckas
         try {
           console.log("🔄 Trying interactive token acquisition...");
           const account = msal.accounts[0];
           const interactiveResponse = await msal.instance.acquireTokenPopup({
             scopes: [
-              'https://graph.microsoft.com/Sites.Read.All',
-              'https://graph.microsoft.com/Sites.ReadWrite.All'
+              "https://graph.microsoft.com/Sites.Read.All",
+              "https://graph.microsoft.com/Sites.ReadWrite.All",
             ],
             account: account,
           });
           userToken = interactiveResponse.accessToken;
           console.log("✅ Interactive token acquisition successful");
         } catch (interactiveError) {
-          console.error("❌ Interactive token acquisition failed:", interactiveError);
-          setError("Kunde inte hämta SharePoint-behörigheter. Försök logga ut och in igen.");
+          console.error(
+            "❌ Interactive token acquisition failed:",
+            interactiveError
+          );
+          setError(
+            "Kunde inte hämta SharePoint-behörigheter. Försök logga ut och in igen."
+          );
           return;
         }
       }

@@ -14,7 +14,7 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Test Job
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -41,13 +41,13 @@ jobs:
           echo "📁 Build output available in dist/ directory"
           echo "📋 Build contains:"
           ls -la dist/
-          
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
           name: build-files
           path: dist/
-          
+
       - name: Deployment Instructions
         run: |
           echo "🚀 DEPLOYMENT INSTRUCTIONS:"
@@ -73,13 +73,13 @@ jobs:
     needs: build_and_test
     runs-on: ubuntu-latest
     name: Deploy to Azure Static Web Apps
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: true
-          
+
       - name: Download build artifacts
         uses: actions/download-artifact@v3
         with:
@@ -93,5 +93,6 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "/"
+          api_location: "api" # NEW: Deploy Azure Functions API
           output_location: "dist"
-          skip_app_build: true  # Use pre-built artifacts
+          skip_app_build: true # Use pre-built artifacts

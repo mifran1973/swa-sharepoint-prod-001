@@ -1,0 +1,11 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "AzureAd__ClientId": "110bbc9c-7b2c-4364-afad-b954953e3b7b",
+    "AzureAd__TenantId": "14f493f8-7990-4a8d-9885-37e35f0fe7d3",
+    "AzureAd__Instance": "https://login.microsoftonline.com/",
+    "AzureAd__ClientSecret": "YOUR_CLIENT_SECRET_FOR_LOCAL_DEV"
+  }
+}

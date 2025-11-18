@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Azure Functions build output
+api/bin/
+api/obj/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
